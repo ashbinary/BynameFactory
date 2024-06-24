@@ -7,7 +7,7 @@
             string[] DirectoryVersions = AssetData.GetDirectories().Select(dir => dir.Name).ToArray();
 
             // Below here is where you can customize the output.
-            PrintBynameText("7.1.0", OrderKind.Subject, Language.JPja, null);
+            PrintBynameText("8.0.0", OrderKind.Adjective, Language.JPja, null);
         }
 
         public static void PrintBynameText(string GameVersion, OrderKind BynameType, Language GameLanguage, Gender? UserGender) {
