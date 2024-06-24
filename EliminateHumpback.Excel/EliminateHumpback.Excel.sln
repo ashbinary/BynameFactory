@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.002.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EliminateHumpback.Excel", "EliminateHumpback.Excel.csproj", "{07E58930-D0E1-4A38-9097-3EA40FD8FF86}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NintendoTools", "NintendoTools\NintendoTools.csproj", "{58FDE196-8A17-48D0-8CE5-63C78A0C069F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{07E58930-D0E1-4A38-9097-3EA40FD8FF86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07E58930-D0E1-4A38-9097-3EA40FD8FF86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07E58930-D0E1-4A38-9097-3EA40FD8FF86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07E58930-D0E1-4A38-9097-3EA40FD8FF86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58FDE196-8A17-48D0-8CE5-63C78A0C069F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58FDE196-8A17-48D0-8CE5-63C78A0C069F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58FDE196-8A17-48D0-8CE5-63C78A0C069F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58FDE196-8A17-48D0-8CE5-63C78A0C069F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8F51416D-6AA0-4766-9E28-6FBB12698B47}
+	EndGlobalSection
+EndGlobal
