@@ -1,133 +1,132 @@
-﻿using System.Collections.Specialized;
-using System.Runtime.InteropServices;
-using Compressers = NintendoTools.Compression;
-using DataTypes = NintendoTools.FileFormats;
+﻿using Zstd = NintendoTools.Compression.Zstd;
+using Sarc = NintendoTools.FileFormats.Sarc;
+using Msbt = NintendoTools.FileFormats.Msbt;
+using Byml = NintendoTools.FileFormats.Byml;
+using NintendoTools.FileFormats.Byml;
 
-namespace EliminateHumpback {
-    class Program {
-        
-        public static void Main() {
-            Console.OutputEncoding = System.Text.Encoding.Default;
+class BynameCheck {
 
-            String[] dialects = {"CNzh", "EUde", "EUen", "EUes", "EUfr", "EUit", "EUnl", "EUru", "JPja", "KRko", "TWzh", "USen", "USes", "USfr"};
-            String[] versions = {"1.0.0", "1.1.0", "1.1.1", "1.2.1", "2.0.0", "2.0.1", "2.1.0", "2.1.1", "3.0.0", "3.0.1", "3.1.0", "3.1.1", "4.0.1", "4.0.2", "4.1.0", "5.0.0", "5.0.1", "5.1.0", "5.2.0"};
-            String[] fileversions = {"100", "110", "110", "120", "200", "200", "200", "200", "300", "300", "310", "310", "400", "400", "410", "500", "500", "510", "520"};
+    public static String DIALECT = "JPja";
+    public static String VERSION = "500";
+    public static String TYPE = "Subject";
+    public static String GENDER = "";
 
-            String[] dialectsMin = {"JPja", "USen"};
+    public static void NotMain() {
+        Console.OutputEncoding = System.Text.Encoding.Default;
+        List<string> FileData = new();
 
-                    foreach (string dial in dialects)
-                        ObtainBynames(dial, "7.2.0", "720", "Subject", "");
+        Console.Write("Choose a dialect.\n>> ");
+        DIALECT = Console.ReadLine(); 
+
+        Console.Write("\nChoose a version.\n>> ");
+        VERSION = Console.ReadLine(); 
+
+        Console.Write("\nChoose what needs to be found. (Subject/Adjective)\n>> ");
+        TYPE = Console.ReadLine(); 
+
+        if (TYPE == "Adjective") {
+            Console.Write("\nChoose the gendered term type. (Feminine/Masculine/Common (EUnl only))\n>> ");
+            GENDER = Console.ReadLine(); 
         }
 
-        public static void ObtainBynames(string dialect, string version, string fileversion, string type, string gender) {
-            OrderedDictionary Byname = GetBynames(dialect, version, fileversion, type, gender);
+        Console.WriteLine("");
 
-            if (Byname.Count < 1) {
-                Console.WriteLine("No file found!");
-            } else {
-                List<int> NoneValues = new();
+        var BynameLang = GetByname("asset/" + DIALECT + ".Product." + VERSION + ".sarc.zs");
+        var BynameList = GetBynameList("asset/Bootup.Nin_NX_NVN.pack.zs");
+        var RealNode = (ArrayNode) BynameList.RootNode.Find("Labels");
 
-                for (int index = 0; index < Byname.Count; index++)
-                    if (Byname[index] == null) NoneValues.Add(index);
-                
-                String[] BynameKeys = new String[Byname.Count];
-                Byname.Keys.CopyTo(BynameKeys, 0);
+        List<String> BynameOrder = new();
+        Dictionary<String, String> BynameData = new();
 
-                Directory.CreateDirectory($"file/{type}/{version}");
-                using (StreamWriter outputFile = new StreamWriter($"file/{type}/{version}/BynameData.{dialect}.{"7.2.0".Replace(".", string.Empty)}.{type}{gender}.txt")) {
-                    foreach (int value in NoneValues) {
-                        int[] offsetValue = {1, 1};
+        for (int i = 0; i < RealNode.Count; i++) {
+            BynameOrder.Add(((ValueNode<String>) RealNode[i]).Value);
+            // ((NintendoTools.FileFormats.Byml.ArrayNode)(new System.Collections.Generic.IDictionaryDebugView<string, NintendoTools.FileFormats.Byml.Node>(((NintendoTools.FileFormats.Byml.DictionaryNode)BynameList.RootNode)._nodes).Items[0]).Value)._nodes
+        }
 
-                        try {
-                            while (Byname[value + offsetValue[0]] == null) { offsetValue[0] += 1; }
-                        } catch (System.ArgumentOutOfRangeException) {
-                            offsetValue[0] = 0;
-                        }
+        for (int i = 0; i < BynameLang.Count; i++) {
+            if (BynameLang[i].ToCleanString() != "")
+                BynameData.Add(BynameLang[i].Label, BynameLang[i].ToCleanString());
+        }
 
-                        try {
-                            while (Byname[value - offsetValue[1]] == null) { offsetValue[1] += 1; }
-                        } catch (System.ArgumentOutOfRangeException) {
-                            offsetValue[1] = 0;
-                        }
+        Console.WriteLine("Obtaining Byname data...");
 
-                        Console.WriteLine(Byname[value - offsetValue[1]]);
+        for (int i = 0; i < BynameOrder.Count - 1; i++) {
+            if (!BynameData.ContainsKey(BynameOrder[i])) {
+                int[] offset = {1, 1};
 
-                        outputFile.WriteLine(
-                            BynameKeys[value] + " -> " +
-                            (offsetValue[1] != 0 ? Byname[value - offsetValue[1]] : "START") + " - " +
-                            (offsetValue[0] != 0 ? Byname[value + offsetValue[0]] : "END")
-                        );
-                    }
+                try {
+                    while (!BynameData.ContainsKey(BynameOrder[i + offset[0]])) { offset[0] += 1; }
+                } catch (System.ArgumentOutOfRangeException) {
+                    offset[0] = 0;
                 }
-            }
 
+                try {
+                    while (!BynameData.ContainsKey(BynameOrder[i - offset[1]])) { offset[1] += 1; }
+                } catch (System.ArgumentOutOfRangeException) {
+                    offset[1] = 0;
+                }
+
+                FileData.Add(BynameOrder[i] + " -> " + 
+                    (offset[1] != 0 ? BynameData[BynameOrder[i - offset[1]]] : "START" )+ 
+                    " - " + 
+                    (offset[0] != 0 ? BynameData[BynameOrder[i + offset[0]]] : "END"));
+            }    
         }
 
-        public static OrderedDictionary GetBynames(string dialect, string version, string fileversion, string type, string gender) {
-            DataTypes.Byml.BymlFile BynameOrder = GetBynameOrder(dialect, version, type, gender);
-            IList<DataTypes.Msbt.MsbtMessage> BynameData = GetBynameData(dialect, version, fileversion, type);
+        Console.WriteLine("Writing data to file...");
 
-            DataTypes.Byml.ArrayNode BynameOrderList;
-
-            try {
-                BynameOrderList = (DataTypes.Byml.ArrayNode) BynameOrder.RootNode.Find("Labels");
-            } catch (System.NullReferenceException) { return new OrderedDictionary(); }
-
-            OrderedDictionary dictionary = new();
-            for (int order = 0; order < BynameOrderList.Count; order++)
-                dictionary.Add(((DataTypes.Byml.ValueNode<String>) BynameOrderList[order]).Value, null);
-
-            for (int data = 0; data < BynameData.Count; data++)
-                dictionary[BynameData[data].Label] = BynameData[data].ToCleanString();
-
-            return dictionary;
+        using (StreamWriter outputFile = new StreamWriter("BynameData." + DIALECT + "." + VERSION + "." + TYPE + ".txt")) {
+            foreach (string line in FileData) outputFile.WriteLine(line);
         }
-
-
-        public static DataTypes.Byml.BymlFile GetBynameOrder(string dialect, string version, string type, string gender) {
-            IList<DataTypes.Sarc.SarcFile> decompFile = Parsers.ParseSarc(Parsers.DecompressZstd($"asset/{version}/Pack/Bootup.Nin_NX_NVN.pack.zs"));
-            Console.WriteLine($"Found file at asset/{version}/Pack/Bootup.Nin_NX_NVN.pack.zs");
-
-            for (int i = 0; i < decompFile.Count; i++) {
-                if (decompFile[i].Name == $"Gyml/BynameOrder/{type}_{dialect}{gender}.spl__BynameOrder.bgyml")
-                    return Parsers.ParseByml(new MemoryStream(decompFile[i].Content));
-            }
-
-            DataTypes.Byml.BymlFile failedCheck = new();
-            failedCheck.Version = 1992; // lol
-            return failedCheck;
-        }
-
-        // CURSE OF NULL DEREFERENECE 𓀀 𓀁 𓀂 𓀃 𓀄 𓀅 𓀆 𓀇 𓀈 𓀉 𓀊 𓀋 𓀌 𓀍 𓀎 𓀏 𓀐 𓀑 𓀒 𓀓 𓀔 𓀕 𓀖 𓀗 𓀘 𓀙 𓀚 𓀛 𓀜 𓀝 𓀞 𓀟 𓀠 𓀡 𓀢 𓀣 𓀤 
-        public static IList<DataTypes.Msbt.MsbtMessage> GetBynameData(string dialect, string version, string fileversion, string type) {
-            IList<DataTypes.Sarc.SarcFile> decompFile = Parsers.ParseSarc(Parsers.DecompressZstd($"asset/{version}/Mals/{dialect}.Product.{fileversion}.sarc.zs"));
-            Console.WriteLine($"Found file at asset/{version}/Mals/{dialect}.Product.{version.Replace(".", string.Empty)}.sarc.zs");
-
-            for (int i = 0; i < decompFile.Count; i++) {
-                if (decompFile[i].Name == $"CommonMsg/Byname/Byname{type}.msbt")
-                    return Parsers.ParseMsbt(new MemoryStream(decompFile[i].Content));
-            }
-
-            return null;
-        }
+        
+        Console.WriteLine("Finished writing to file!\nWrote data to " + "BynameData." + DIALECT + "." + VERSION + "." + TYPE + ".txt.\nPress any key to continue.");
+        Console.ReadKey();
     }
 
-    class Parsers {
-        public static Stream DecompressZstd(String fileInput) {
-            using Stream input = File.OpenRead(fileInput);
-                return new Compressers.Zstd.ZstdDecompressor().Decompress(input);
+    public static IList<Msbt.MsbtMessage> GetByname(String file) {
+        Stream decompressed_zstd = null;
+        try { decompressed_zstd = Parsers.DecompressZstd(file); }
+        catch (FileNotFoundException) { throw new FileNotFoundException(file + " could not be found. Data files should be placed in ../asset/."); }
+        var decompressed_sarc = Parsers.ParseSarc(decompressed_zstd);
+
+        for (int i = 0; i < decompressed_sarc.Count; i++) {
+            if (decompressed_sarc[i].Name == "CommonMsg/Byname/Byname" + TYPE + ".msbt")
+                return Parsers.ParseMsbt(new MemoryStream(decompressed_sarc[i].Content));
         }
 
-        public static IList<DataTypes.Sarc.SarcFile> ParseSarc(Stream stream) {
-            return new DataTypes.Sarc.SarcFileParser().Parse(stream); 
+        return null;
+    }
+
+    public static Byml.BymlFile GetBynameList(String file) {
+        Stream decompressed_zstd = null;
+        try { decompressed_zstd = Parsers.DecompressZstd(file); }
+        catch (FileNotFoundException) { throw new FileNotFoundException(file + " could not be found. Data files should be placed in ../asset/."); }
+        var decompressed_sarc = Parsers.ParseSarc(decompressed_zstd);
+
+        for (int i = 0; i < decompressed_sarc.Count; i++) {
+            if (decompressed_sarc[i].Name == "Gyml/BynameOrder/" + TYPE + "_" + DIALECT + ".spl__BynameOrder.bgyml")
+                return Parsers.ParseByml(new MemoryStream(decompressed_sarc[i].Content));
         }
 
-        public static IList<DataTypes.Msbt.MsbtMessage> ParseMsbt(Stream stream) {
-            return new DataTypes.Msbt.MsbtFileParser().Parse(stream);
-        } 
+        return null;
+    }
+}
 
-        public static DataTypes.Byml.BymlFile ParseByml(Stream stream) {
-            return new DataTypes.Byml.BymlFileParser().Parse(stream);
-        }
+class Parsers {
+    public static Stream DecompressZstd(String fileInput) {
+        using Stream input = File.OpenRead(fileInput);
+            return new Zstd.ZstdDecompressor().Decompress(input);
+    }
+
+    public static IList<Sarc.SarcFile> ParseSarc(Stream stream) {
+        return new Sarc.SarcFileParser().Parse(stream); 
+    }
+
+    public static IList<Msbt.MsbtMessage> ParseMsbt(Stream stream) {
+        return new Msbt.MsbtFileParser().Parse(stream);
+    } 
+
+    public static Byml.BymlFile ParseByml(Stream stream) {
+        return new Byml.BymlFileParser().Parse(stream);
     }
 }
